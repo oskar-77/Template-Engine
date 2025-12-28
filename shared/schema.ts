@@ -1,4 +1,4 @@
-import { pgTable, text, serial, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -6,8 +6,12 @@ import { z } from "zod";
 export const templates = pgTable("templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  imageUrl: text("image_url").notNull(), // Can be a data URI for uploaded images or a path for presets
+  imageUrl: text("image_url").notNull(), 
   isCustom: boolean("is_custom").default(false),
+  displayText: text("display_text"), // For on-screen text
+  primaryColor: text("primary_color").default("#00ffcc"), // Cyan default
+  secondaryColor: text("secondary_color").default("#ff0066"), // Pink default
+  scale: real("scale").default(1.0), // For zooming in/out
   createdAt: timestamp("created_at").defaultNow(),
 });
 

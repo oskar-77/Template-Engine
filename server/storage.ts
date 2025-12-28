@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   getTemplates(): Promise<Template[]>;
   createTemplate(template: InsertTemplate): Promise<Template>;
+  updateTemplate(id: number, updates: Partial<InsertTemplate>): Promise<Template>;
   deleteTemplate(id: number): Promise<void>;
 }
 
@@ -23,6 +24,16 @@ export class DatabaseStorage implements IStorage {
       .values(insertTemplate)
       .returning();
     return template;
+  }
+
+  async updateTemplate(id: number, updates: Partial<InsertTemplate>): Promise<Template> {
+    const [updated] = await db
+      .update(templates)
+      .set(updates)
+      .where(eq(templates.id, id))
+      .returning();
+    if (!updated) throw new Error("Template not found");
+    return updated;
   }
 
   async deleteTemplate(id: number): Promise<void> {

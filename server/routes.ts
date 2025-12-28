@@ -9,7 +9,6 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Increase payload size for image uploads (base64)
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -34,33 +33,41 @@ export async function registerRoutes(
     }
   });
 
+  app.patch(api.templates.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const input = api.templates.update.input.parse(req.body);
+      const template = await storage.updateTemplate(id, input);
+      if (!template) return res.status(404).json({ message: "Template not found" });
+      res.json(template);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   app.delete(api.templates.delete.path, async (req, res) => {
     await storage.deleteTemplate(Number(req.params.id));
     res.status(204).send();
   });
 
-  // Initialize default templates
-  await seedDatabase();
-
   return httpServer;
 }
 
-// Seed function to add default templates
 export async function seedDatabase() {
   const existing = await storage.getTemplates();
   if (existing.length === 0) {
     const presets = [
-      { name: "Sphere", imageUrl: "preset:sphere", isCustom: false },
-      { name: "Cube", imageUrl: "preset:grid", isCustom: false },
-      { name: "DNA", imageUrl: "preset:helix", isCustom: false },
-      { name: "Torus", imageUrl: "preset:torus", isCustom: false },
-      { name: "Wave", imageUrl: "preset:wave", isCustom: false },
-      { name: "Pyramid", imageUrl: "preset:pyramid", isCustom: false },
-      { name: "Galaxy", imageUrl: "preset:galaxy", isCustom: false },
-      { name: "Heart", imageUrl: "preset:heart", isCustom: false },
-      { name: "Flower", imageUrl: "preset:flower", isCustom: false },
-      { name: "Fountain", imageUrl: "preset:fountain", isCustom: false },
-      { name: "Spiral", imageUrl: "preset:spiral", isCustom: false },
+      { name: "Sphere", imageUrl: "preset:sphere", isCustom: false, displayText: "Molecular Sphere", primaryColor: "#00ffcc", secondaryColor: "#7700ff", scale: 1.0 },
+      { name: "Cube", imageUrl: "preset:grid", isCustom: false, displayText: "Grid Structure", primaryColor: "#ff0066", secondaryColor: "#00ffcc", scale: 1.0 },
+      { name: "DNA", imageUrl: "preset:helix", isCustom: false, displayText: "Genetic Code", primaryColor: "#7700ff", secondaryColor: "#ff0066", scale: 1.0 },
+      { name: "Galaxy", imageUrl: "preset:galaxy", isCustom: false, displayText: "Cosmic Particles", primaryColor: "#00ffcc", secondaryColor: "#ff0066", scale: 1.5 },
+      { name: "Heart", imageUrl: "preset:heart", isCustom: false, displayText: "Core Pulse", primaryColor: "#ff0066", secondaryColor: "#7700ff", scale: 1.2 },
     ];
     
     for (const p of presets) {

@@ -32,6 +32,16 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/templates/:id',
+      input: insertTemplateSchema.partial(),
+      responses: {
+        200: z.custom<typeof templates.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
     delete: {
       method: 'DELETE' as const,
       path: '/api/templates/:id',
@@ -57,3 +67,4 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
 
 export type TemplateInput = z.infer<typeof api.templates.create.input>;
 export type TemplateResponse = z.infer<typeof api.templates.create.responses[201]>;
+export type TemplateUpdateInput = z.infer<typeof api.templates.update.input>;
