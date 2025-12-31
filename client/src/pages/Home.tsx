@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { ParticleViewer } from "@/components/ParticleViewer";
 import { useTemplates, useDeleteTemplate } from "@/hooks/use-templates";
+import { useShapeDescriptions, useUpdateShapeDescription } from "@/hooks/use-shape-descriptions";
 import { GlassCard } from "@/components/GlassCard";
 import { UploadButton } from "@/components/UploadButton";
 import { Button } from "@/components/ui/button";
-import { Trash2, Atom, Grid, Activity, CircleDot, Waves, Box, Pyramid, Tornado, Flower2, Stars, Heart, Droplets, Infinity, Zap, Cloud, Dices, Hexagon, Repeat2, Triangle, Sparkles, Cylinder, BarChart3, TrendingUp, Layers, Network, Wind } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Trash2, Atom, Grid, Activity, CircleDot, Waves, Box, Pyramid, Tornado, Flower2, Stars, Heart, Droplets, Infinity, Zap, Cloud, Dices, Hexagon, Repeat2, Triangle, Sparkles, Cylinder, BarChart3, TrendingUp, Layers, Network, Wind, Edit2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -41,9 +46,40 @@ const PRESETS = [
 export default function Home() {
   const [activeMode, setActiveMode] = useState<string>('sphere');
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [editingShape, setEditingShape] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   
   const { data: templates = [], isLoading } = useTemplates();
   const { mutate: deleteTemplate, isPending: isDeleting } = useDeleteTemplate();
+  const { data: descriptions = [] } = useShapeDescriptions();
+  const { mutate: updateDescription, isPending: isUpdating } = useUpdateShapeDescription();
+
+  const getShapeDescription = (shapeId: string) => {
+    return descriptions.find(d => d.shapeId === shapeId);
+  };
+
+  const openEditDialog = (shapeId: string) => {
+    const existing = getShapeDescription(shapeId);
+    const preset = PRESETS.find(p => p.id === shapeId);
+    setEditingShape(shapeId);
+    setEditTitle(existing?.title || preset?.name || '');
+    setEditDescription(existing?.description || '');
+  };
+
+  const handleSaveDescription = () => {
+    if (editingShape) {
+      updateDescription({
+        shapeId: editingShape,
+        title: editTitle,
+        description: editDescription,
+      }, {
+        onSuccess: () => {
+          setEditingShape(null);
+        },
+      });
+    }
+  };
 
   const handlePresetClick = (mode: string) => {
     setActiveMode(mode);
@@ -71,9 +107,7 @@ export default function Home() {
         <div className="w-full md:w-80 pointer-events-auto space-y-4">
           <GlassCard>
             <h1 className="text-3xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2">
-              MOLECULAR
-              <br />
-              LABORATORY
+              Mr.OSKAR
             </h1>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground font-mono">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -117,23 +151,33 @@ export default function Home() {
                 <div>
                   <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3 px-1">Standard Models</h3>
                   <div className="grid grid-cols-3 gap-2">
-                    {PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        onClick={() => handlePresetClick(preset.id)}
-                        className={`
-                          flex flex-col items-center justify-center p-3 rounded-lg border transition-all duration-200 group
-                          ${activeMode === preset.id 
-                            ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(0,255,204,0.3)]' 
-                            : 'bg-black/40 border-white/10 hover:border-primary/50 hover:bg-white/5'}
-                        `}
-                      >
-                        <preset.icon 
-                          className={`w-6 h-6 mb-2 transition-colors ${activeMode === preset.id ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} 
-                        />
-                        <span className="text-[10px] uppercase font-bold tracking-wider">{preset.name}</span>
-                      </button>
-                    ))}
+                    {PRESETS.map((preset) => {
+                      const desc = getShapeDescription(preset.id);
+                      return (
+                        <div key={preset.id} className="relative group">
+                          <button
+                            onClick={() => handlePresetClick(preset.id)}
+                            className={`
+                              w-full flex flex-col items-center justify-center p-3 rounded-lg border transition-all duration-200
+                              ${activeMode === preset.id 
+                                ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(0,255,204,0.3)]' 
+                                : 'bg-black/40 border-white/10 hover:border-primary/50 hover:bg-white/5'}
+                            `}
+                          >
+                            <preset.icon 
+                              className={`w-6 h-6 mb-2 transition-colors ${activeMode === preset.id ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} 
+                            />
+                            <span className="text-[10px] uppercase font-bold tracking-wider">{preset.name}</span>
+                          </button>
+                          <button
+                            onClick={() => openEditDialog(preset.id)}
+                            className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/80 hover:bg-primary p-1 rounded-full"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -204,6 +248,47 @@ export default function Home() {
           </GlassCard>
         </div>
       </div>
+
+      {/* Edit Description Dialog */}
+      <Dialog open={!!editingShape} onOpenChange={(open) => !open && setEditingShape(null)}>
+        <DialogContent className="max-w-2xl bg-black/90 border-primary/30">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Edit Shape Information</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title" className="text-primary">Title</Label>
+              <Input
+                id="title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="bg-black/50 border-white/10 text-white mt-2"
+                placeholder="Shape title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description" className="text-primary">Description (Markdown)</Label>
+              <Textarea
+                id="description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="bg-black/50 border-white/10 text-white mt-2 min-h-[200px]"
+                placeholder="Shape description with markdown support..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingShape(null)}>Cancel</Button>
+            <Button 
+              onClick={handleSaveDescription} 
+              disabled={isUpdating}
+              className="bg-primary/80 hover:bg-primary"
+            >
+              {isUpdating ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

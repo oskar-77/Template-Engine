@@ -56,6 +56,48 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  // Shape descriptions endpoints
+  app.get("/api/shapes/descriptions", async (req, res) => {
+    const descriptions = await storage.getShapeDescriptions();
+    res.json(descriptions);
+  });
+
+  app.get("/api/shapes/descriptions/:shapeId", async (req, res) => {
+    const description = await storage.getShapeDescription(req.params.shapeId);
+    if (!description) return res.status(404).json({ message: "Shape description not found" });
+    res.json(description);
+  });
+
+  app.post("/api/shapes/descriptions", async (req, res) => {
+    try {
+      const { shapeId, title, description } = req.body;
+      if (!shapeId || !title || !description) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      const result = await storage.upsertShapeDescription({ shapeId, title, description });
+      res.status(201).json(result);
+    } catch (err) {
+      res.status(500).json({ message: "Error saving shape description" });
+    }
+  });
+
+  app.patch("/api/shapes/descriptions/:shapeId", async (req, res) => {
+    try {
+      const { title, description } = req.body;
+      if (!title || !description) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      const result = await storage.upsertShapeDescription({ 
+        shapeId: req.params.shapeId, 
+        title, 
+        description 
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating shape description" });
+    }
+  });
+
   return httpServer;
 }
 
