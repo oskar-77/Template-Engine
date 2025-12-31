@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Trash2, Atom, Grid, Activity, CircleDot, Waves, Box, Pyramid, Tornado, Flower2, Stars, Heart, Droplets, Infinity, Zap, Cloud, Dices, Hexagon, Repeat2, Triangle, Sparkles, Cylinder, BarChart3, TrendingUp, Layers, Network, Wind, Edit2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 
 // Standard preset definitions with icons
 const PRESETS = [
@@ -46,6 +47,7 @@ const PRESETS = [
 export default function Home() {
   const [activeMode, setActiveMode] = useState<string>('sphere');
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [activeTemplateId, setActiveTemplateId] = useState<number | null>(null);
   const [editingShape, setEditingShape] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -59,11 +61,11 @@ export default function Home() {
     return descriptions.find(d => d.shapeId === shapeId);
   };
 
-  const openEditDialog = (shapeId: string) => {
+  const openEditDialog = (shapeId: string, defaultTitle?: string) => {
     const existing = getShapeDescription(shapeId);
     const preset = PRESETS.find(p => p.id === shapeId);
     setEditingShape(shapeId);
-    setEditTitle(existing?.title || preset?.name || '');
+    setEditTitle(existing?.title || defaultTitle || preset?.name || '');
     setEditDescription(existing?.description || '');
   };
 
@@ -81,14 +83,34 @@ export default function Home() {
     }
   };
 
+  const getCurrentShapeDescription = () => {
+    if (activeMode === 'custom' && activeTemplateId) {
+      return getShapeDescription(`template-${activeTemplateId}`);
+    }
+    return getShapeDescription(activeMode);
+  };
+
+  const getCurrentShapeTitle = () => {
+    if (activeMode === 'custom' && activeTemplateId) {
+      const template = templates.find(t => t.id === activeTemplateId);
+      const desc = getShapeDescription(`template-${activeTemplateId}`);
+      return desc?.title || template?.name || 'Custom Shape';
+    }
+    const preset = PRESETS.find(p => p.id === activeMode);
+    const desc = getShapeDescription(activeMode);
+    return desc?.title || preset?.name || activeMode;
+  };
+
   const handlePresetClick = (mode: string) => {
     setActiveMode(mode);
     setCustomImage(null);
+    setActiveTemplateId(null);
   };
 
   const handleTemplateClick = (template: any) => {
     setActiveMode('custom');
     setCustomImage(template.imageUrl);
+    setActiveTemplateId(template.id);
   };
 
   return (
@@ -104,7 +126,7 @@ export default function Home() {
       <div className="absolute inset-0 z-10 pointer-events-none p-6 md:p-8 flex flex-col md:flex-row justify-between">
         
         {/* Left Panel: Info */}
-        <div className="w-full md:w-80 pointer-events-auto space-y-4">
+        <div className="w-full md:w-80 pointer-events-auto space-y-4 flex flex-col">
           <GlassCard>
             <h1 className="text-3xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2">
               Mr.OSKAR
@@ -117,7 +139,7 @@ export default function Home() {
             <div className="mt-6 space-y-2">
               <div className="flex justify-between text-sm border-b border-primary/20 pb-2">
                 <span className="text-primary">Current Mode</span>
-                <span className="font-bold uppercase tracking-wider">{activeMode}</span>
+                <span className="font-bold uppercase tracking-wider">{getCurrentShapeTitle()}</span>
               </div>
               <div className="flex justify-between text-sm border-b border-primary/20 pb-2">
                 <span className="text-primary">Particles</span>
@@ -135,6 +157,44 @@ export default function Home() {
               <span className="text-primary/70">Hover</span> to repel.
             </p>
           </GlassCard>
+
+          {/* Description Card */}
+          {getCurrentShapeDescription() && (
+            <GlassCard className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Information</h3>
+                <button
+                  onClick={() => {
+                    const shapeId = activeMode === 'custom' && activeTemplateId ? `template-${activeTemplateId}` : activeMode;
+                    const template = activeTemplateId ? templates.find(t => t.id === activeTemplateId) : null;
+                    openEditDialog(shapeId, template?.name);
+                  }}
+                  className="p-1.5 rounded hover:bg-primary/20 text-primary/60 hover:text-primary transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="prose prose-invert prose-sm max-w-none text-xs text-muted-foreground">
+                  <ReactMarkdown
+                    components={{
+                      p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                      h1: ({node, ...props}) => <h1 className="text-lg font-bold text-primary mb-2" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-base font-bold text-primary/90 mb-2" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-sm font-bold text-primary/80 mb-1" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                      ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                      li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                      code: ({node, ...props}) => <code className="bg-black/50 px-1.5 py-0.5 rounded text-primary/80 font-mono" {...props} />,
+                      blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-primary/50 pl-2 italic opacity-80" {...props} />,
+                    }}
+                  >
+                    {getCurrentShapeDescription()?.description || ''}
+                  </ReactMarkdown>
+                </div>
+              </ScrollArea>
+            </GlassCard>
+          )}
         </div>
 
         {/* Right Panel: Controls */}
@@ -170,8 +230,12 @@ export default function Home() {
                             <span className="text-[10px] uppercase font-bold tracking-wider">{preset.name}</span>
                           </button>
                           <button
-                            onClick={() => openEditDialog(preset.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog(preset.id);
+                            }}
                             className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/80 hover:bg-primary p-1 rounded-full"
+                            title="Edit description"
                           >
                             <Edit2 className="w-3 h-3" />
                           </button>
@@ -211,6 +275,19 @@ export default function Home() {
                             className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" 
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                          
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditDialog(`template-${template.id}`, template.name);
+                              }}
+                              className="p-2 bg-primary/80 hover:bg-primary rounded-full transition-colors"
+                              title="Edit description"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          </div>
                           
                           <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
                             <span className="text-xs font-bold truncate">{template.name}</span>
