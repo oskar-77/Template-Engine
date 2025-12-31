@@ -211,6 +211,122 @@ export function ParticleViewer({ mode, customImageData }: ParticleViewerProps) {
             homePoints[i3] = r * Math.cos(angle);
             homePoints[i3+1] = h * 80 - 40;
             homePoints[i3+2] = r * Math.sin(angle);
+        } else if (currentMode === 'doublehelix') {
+            const t = (i / PARTICLE_COUNT) * Math.PI * 4;
+            const offset = i % 2 === 0 ? 10 : -10;
+            homePoints[i3] = 15 * Math.cos(t) + offset;
+            homePoints[i3+1] = (i / PARTICLE_COUNT) * 80 - 40;
+            homePoints[i3+2] = 15 * Math.sin(t);
+        } else if (currentMode === 'vortex') {
+            const t = i / PARTICLE_COUNT * Math.PI * 8;
+            const r = (i / PARTICLE_COUNT) * 50;
+            homePoints[i3] = r * Math.cos(t);
+            homePoints[i3+1] = (Math.sin(t * 2) * 30) + (Math.random() - 0.5) * 10;
+            homePoints[i3+2] = r * Math.sin(t);
+        } else if (currentMode === 'nebula') {
+            const r = Math.random() * 50;
+            const phi = Math.random() * Math.PI * 2;
+            const theta = Math.random() * Math.PI;
+            homePoints[i3] = r * Math.sin(theta) * Math.cos(phi);
+            homePoints[i3+1] = r * Math.cos(theta);
+            homePoints[i3+2] = r * Math.sin(theta) * Math.sin(phi);
+        } else if (currentMode === 'octahedron') {
+            const layer = Math.floor(i / (PARTICLE_COUNT / 8));
+            const layerIndex = i % (PARTICLE_COUNT / 8);
+            const angle = (layerIndex / (PARTICLE_COUNT / 8)) * Math.PI * 2;
+            const layerDistance = Math.abs(layer - 4);
+            const radius = (8 - layerDistance) * 8;
+            homePoints[i3] = radius * Math.cos(angle);
+            homePoints[i3+1] = (layer - 4) * 15;
+            homePoints[i3+2] = radius * Math.sin(angle);
+        } else if (currentMode === 'icosahedron') {
+            const phi = (1 + Math.sqrt(5)) / 2;
+            const vertices = [
+                [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+                [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+                [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1],
+            ];
+            const vertex = vertices[i % vertices.length];
+            const scale = 25;
+            const rnd = (i / PARTICLE_COUNT);
+            homePoints[i3] = vertex[0] * scale + (Math.random() - 0.5) * 5;
+            homePoints[i3+1] = vertex[1] * scale + (Math.random() - 0.5) * 5;
+            homePoints[i3+2] = vertex[2] * scale + (Math.random() - 0.5) * 5;
+        } else if (currentMode === 'mobius') {
+            const u = (i / PARTICLE_COUNT) * Math.PI * 2;
+            const v = (i % 100) * 0.08 - 2;
+            const r = 30 + v * Math.cos(u / 2);
+            homePoints[i3] = r * Math.cos(u);
+            homePoints[i3+1] = v * Math.sin(u / 2) * 5;
+            homePoints[i3+2] = r * Math.sin(u);
+        } else if (currentMode === 'cone') {
+            const layer = Math.floor(i / (PARTICLE_COUNT / 20));
+            const angle = (i % (PARTICLE_COUNT / 20)) / (PARTICLE_COUNT / 20) * Math.PI * 2;
+            const radius = (1 - layer / 20) * 50;
+            homePoints[i3] = radius * Math.cos(angle);
+            homePoints[i3+1] = (layer - 10) * 4;
+            homePoints[i3+2] = radius * Math.sin(angle);
+        } else if (currentMode === 'starburst') {
+            const arms = 8;
+            const arm = Math.floor((i / PARTICLE_COUNT) * arms);
+            const progress = ((i % (PARTICLE_COUNT / arms)) / (PARTICLE_COUNT / arms));
+            const angle = (arm / arms) * Math.PI * 2;
+            const dist = progress * 60;
+            homePoints[i3] = dist * Math.cos(angle) + (Math.random() - 0.5) * 3;
+            homePoints[i3+1] = (Math.random() - 0.5) * 20;
+            homePoints[i3+2] = dist * Math.sin(angle) + (Math.random() - 0.5) * 3;
+        } else if (currentMode === 'cylinder') {
+            const angle = (i % 100) / 100 * Math.PI * 2;
+            const height = (Math.floor(i / 100) / (PARTICLE_COUNT / 100)) * 80 - 40;
+            homePoints[i3] = 35 * Math.cos(angle);
+            homePoints[i3+1] = height;
+            homePoints[i3+2] = 35 * Math.sin(angle);
+        } else if (currentMode === 'bars') {
+            const barWidth = Math.floor(Math.pow(PARTICLE_COUNT / 8, 1/3));
+            const barIndex = Math.floor(i / (PARTICLE_COUNT / 8));
+            const x = (i % barWidth - barWidth/2) * 2;
+            const z = (Math.floor((i % (PARTICLE_COUNT / 8)) / barWidth) - barWidth/2) * 2;
+            const barHeight = Math.sin(barIndex / 8 * Math.PI) * 60;
+            homePoints[i3] = x + barIndex * 6 - 20;
+            homePoints[i3+1] = (i / PARTICLE_COUNT) * barHeight - barHeight / 2;
+            homePoints[i3+2] = z;
+        } else if (currentMode === 'curve') {
+            const t = (i / PARTICLE_COUNT) * 4;
+            const x = t * 15 - 30;
+            const y = Math.sin(t * Math.PI) * 30;
+            const z = Math.cos(t * Math.PI * 2) * 20;
+            homePoints[i3] = x;
+            homePoints[i3+1] = y + (Math.random() - 0.5) * 5;
+            homePoints[i3+2] = z + (Math.random() - 0.5) * 5;
+        } else if (currentMode === 'layers') {
+            const layerCount = 10;
+            const layer = Math.floor((i / PARTICLE_COUNT) * layerCount);
+            const radius = 30 + layer * 2;
+            const angle = Math.random() * Math.PI * 2;
+            const layerHeight = layer * 8 - layerCount * 4;
+            homePoints[i3] = radius * Math.cos(angle);
+            homePoints[i3+1] = layerHeight + (Math.random() - 0.5) * 2;
+            homePoints[i3+2] = radius * Math.sin(angle);
+        } else if (currentMode === 'network') {
+            const nodes = 12;
+            const nodeIndex = Math.floor((i / PARTICLE_COUNT) * nodes);
+            const angle = (nodeIndex / nodes) * Math.PI * 2;
+            const radius = 40;
+            const x = radius * Math.cos(angle);
+            const y = radius * Math.sin(angle) * 0.5;
+            const z = radius * Math.sin(angle);
+            const scatter = (i % (PARTICLE_COUNT / nodes)) / (PARTICLE_COUNT / nodes) * 2;
+            homePoints[i3] = x + (Math.random() - 0.5) * scatter * 10;
+            homePoints[i3+1] = y + (Math.random() - 0.5) * scatter * 10;
+            homePoints[i3+2] = z + (Math.random() - 0.5) * scatter * 10;
+        } else if (currentMode === 'rings') {
+            const ringCount = 8;
+            const ring = Math.floor((i / PARTICLE_COUNT) * ringCount);
+            const angle = (i % (PARTICLE_COUNT / ringCount)) / (PARTICLE_COUNT / ringCount) * Math.PI * 2;
+            const radius = 20 + ring * 5;
+            homePoints[i3] = radius * Math.cos(angle);
+            homePoints[i3+1] = ring * 5 - ringCount * 2.5;
+            homePoints[i3+2] = radius * Math.sin(angle);
         } else {
             // Cube/Default
             homePoints[i3] = (Math.random() - 0.5) * 80;

@@ -4,7 +4,7 @@ import { useTemplates, useDeleteTemplate } from "@/hooks/use-templates";
 import { GlassCard } from "@/components/GlassCard";
 import { UploadButton } from "@/components/UploadButton";
 import { Button } from "@/components/ui/button";
-import { Trash2, Atom, Grid, Activity, CircleDot, Waves, Box, Pyramid, Tornado, Flower2, Stars, Heart, Droplets } from "lucide-react";
+import { Trash2, Atom, Grid, Activity, CircleDot, Waves, Box, Pyramid, Tornado, Flower2, Stars, Heart, Droplets, Infinity, Zap, Cloud, Dices, Hexagon, Repeat2, Triangle, Sparkles, Cylinder, BarChart3, TrendingUp, Layers, Network, Wind } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -22,6 +22,20 @@ const PRESETS = [
   { id: 'galaxy', name: 'Galaxy', icon: Stars },
   { id: 'heart', name: 'Heart', icon: Heart },
   { id: 'fountain', name: 'Fountain', icon: Droplets },
+  { id: 'doublehelix', name: 'Double Helix', icon: Infinity },
+  { id: 'vortex', name: 'Vortex', icon: Zap },
+  { id: 'nebula', name: 'Nebula', icon: Cloud },
+  { id: 'octahedron', name: 'Octahedron', icon: Dices },
+  { id: 'icosahedron', name: 'Icosahedron', icon: Hexagon },
+  { id: 'mobius', name: 'Möbius Strip', icon: Repeat2 },
+  { id: 'cone', name: 'Cone', icon: Triangle },
+  { id: 'starburst', name: 'Starburst', icon: Sparkles },
+  { id: 'cylinder', name: 'Cylinder', icon: Cylinder },
+  { id: 'bars', name: 'Bar Chart', icon: BarChart3 },
+  { id: 'curve', name: 'Bezier Curve', icon: TrendingUp },
+  { id: 'layers', name: 'Layers', icon: Layers },
+  { id: 'network', name: 'Network', icon: Network },
+  { id: 'rings', name: 'Rings', icon: Wind },
 ];
 
 export default function Home() {
